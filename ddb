@@ -1,0 +1,55 @@
+#! /usr/bin/perl
+
+use warnings;
+use strict;
+
+
+use My::Schema;
+
+use DateTime::Format::ISO8601;
+
+my $date = DateTime::Format::ISO8601->parse_datetime($ARGV[1], 'YYMMDD');
+
+my $sch = My::Schema->connect("dbi:SQLite:dbname=mca.sqlite");
+
+if ($ARGV[0] =~ /^[A-Z]\d\d\d\d\d$/) {
+    for my $train ($sch->resultset('bs')->search({unique_id => $ARGV[0]})) {
+	if ($train->runs_on($date)) {
+	    for my $cr ($train->crs) {
+		printf("%4s:\n", $cr->train_identity);
+		for my $li ($cr->lis) {
+		    no warnings qw/uninitialized/;
+		    printf("%26s %4s %4s %s\n", $li->ti->tps_descr,
+			   $li->public_arr_time, $li->public_dep_time,
+			   $li->activity);
+		}
+	    }
+	}
+   } 
+} else {
+    my $loc;
+    if ($ARGV[0] =~ /^[A-Z]{3}$/) {
+	$loc = $sch->resultset('ti')->find({crs_code => $ARGV[0]});
+    } else {
+	$loc = $sch->resultset('ti')->find($ARGV[0]);
+    }
+    defined $loc or die "Station '$ARGV[0]' not found.\n";
+
+    print $loc->tps_descr, "\n";
+
+    for my $li ($loc->lis({},
+			  {order_by =>
+			       q{coalesce(public_dep_time, public_arr_time)},
+			   prefetch => {cr => 'bs'}})) {
+	next unless $li->cr->bs->runs_on($date);
+	no warnings qw/uninitialized/;
+	my $lo =  $li->cr->bs->lo;
+	my $lt =  $li->cr->bs->lt;
+	printf "%5s(%4s): %26s %4s %4s %-26s\n",
+	$li->cr->bs->unique_id,
+	$li->cr->train_identity,
+	$lo->id eq $li->id ? '' : $lo->ti->tps_descr,
+	$li->public_arr_time, $li->public_dep_time,
+	$lt->id eq $li->id ? '' : $lt->ti->tps_descr,
+    }
+}
