@@ -95,4 +95,8 @@ while (my $line = <>) {
     }
 }
 
+$dbh->do(q{CREATE INDEX cr_by_bs ON cr(bslineno)});
+$dbh->do(q{CREATE INDEX li_by_cr ON li(crlineno)});
+$dbh->do(q{CREATE INDEX li_by_tiploc ON li(tiploc)});
+
 $dbh->commit;
