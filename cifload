@@ -81,7 +81,7 @@ while (my $line = <>) {
     } elsif ($data[0] eq 'BS') {
 	next unless $data[1] eq 'N'; # Only handle new entries;
 	$bs_ins->execute($., @data[2..7, 25]);
-	$cr_ins->execute($., $., undef, undef, @data[9..24],
+	$cr_ins->execute($., $., undef, undef, @data[8..23],
 			 undef, undef, undef);
 	$lastbs = $lastcr = $.;
     } elsif ($data[0] eq 'BX') {
