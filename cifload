@@ -22,14 +22,14 @@ $dbh->do(q{CREATE TABLE bs (lineno INTEGER PRIMARY KEY,
 			    unique_id, date_runs_from, date_runs_to,
 			    days, bhx, status, stp, atoc_code, ats_code)});
 
-$dbh->do(q{CREATE TABLE cr (lineno INTEGER PRIMARY KEY, bslineno,
+$dbh->do(q{CREATE TABLE cr (lineno INTEGER PRIMARY KEY, bslineno INTEGER,
 			    tiploc, suffix, category, train_identity,
 			    headcode, course_ind, service_code, bussec,
 			    power_type, timing_load, speed, oper_chars,
 			    class, sleepers, reservations, connect_ind,
 			    catering, service_brand, pref_tract, uic_code,
 			    rsid)});
-$dbh->do(q{CREATE TABLE li (crlineno, tiploc, suffix,
+$dbh->do(q{CREATE TABLE li (crlineno INTEGER, tiploc, suffix,
 			    sched_arr_time, sched_dep_time,
 			    sched_pass, public_arr_time, public_dep_time,
 			    platform, line, path, activity, eng_allow,
@@ -83,7 +83,7 @@ while (my $line = <>) {
 	$bs_ins->execute($., @data[2..7, 25]);
 	$cr_ins->execute($., $., undef, undef, @data[9..24],
 			 undef, undef, undef);
-	$lastbs = $.;
+	$lastbs = $lastcr = $.;
     } elsif ($data[0] eq 'BX') {
 	$bs_upd->execute(@data[3, 4], $lastbs);
 	$cr_upd->execute(@data[1,2,5], $lastbs);
