@@ -1,0 +1,66 @@
+#! /usr/bin/perl
+
+use warnings;
+use strict;
+
+use DBI;
+
+my $dbh = DBI->connect("dbi:SQLite:dbname=mca.sqlite", undef, undef,
+		       {AutoCommit => 0});
+
+my %width = (
+    BS => [2,1,6,6,6,7,1,1,2,4,4,1,8,1,3,4,3,6,1,1,1,1,4,4,1,1],
+    BX => [2,4,5,2,1,8,1],
+    CR => [2,8,2,4,4,1,8,1,3,4,3,6,1,1,1,1,4,4,4,5,8],
+    );
+
+$dbh->do(q{CREATE TABLE bs (lineno integer primary key,
+			    unique_id, date_runs_from, date_runs_to,
+			    days, bhx, status, stp, atoc_code, ats_code)});
+
+$dbh->do(q{CREATE TABLE cr (lineno integer primary key, bslineno,
+			    location, category, train_identity,
+			    headcode, course_ind, service_code, bussec,
+			    power_type, timing_load, speed, oper_chars,
+			    class, sleepers, reservations, connect_ind,
+			    catering, service_brand, pref_tract, uic_code,
+			    rsid)});
+
+my $bs_ins = $dbh->prepare(q{INSERT INTO bs VALUES(?,?,?,?,?,?,?,?, NULL, NULL)});
+my $bs_upd = $dbh->prepare(q{UPDATE bs SET atoc_code = ?, ats_code = ?
+			     	       WHERE lineno = ?});
+my $cr_ins = $dbh->prepare(q{INSERT INTO cr VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)});
+my $cr_upd = $dbh->prepare(q{UPDATE cr SET pref_tract = ?, uic_code = ?,
+					   rsid = ?
+				       WHERE lineno = ?});
+
+sub splitline ($) {
+    use integer;
+    my ($line) = @_;
+    my $widths = $width{substr($line, 0, 2)};
+    return [] unless defined $widths;
+    my $pos = 0;
+    my @val = map(substr($line, ($pos += $_) - $_, $_), @$widths);
+    return @val;
+}
+
+
+my ($lastbs, $lastcr);
+my @bsdata;
+while (my $line = <>) {
+    use integer;
+    my @data = splitline($line);
+    if ($data[0] eq 'BS') {
+	next unless $data[1] eq 'N'; # Only handle new entries;
+	$bs_ins->execute($., @data[2..7, 25]);
+	$cr_ins->execute($., $., undef, @bsdata[9..24], undef, undef, undef);
+	$lastbs = $.;
+    } elsif ($data[0] eq 'BX') {
+	$bs_upd->execute(@data[3, 4], $lastbs);
+	$cr_upd->execute(@data[1,2,5], $lastbs);
+    } elsif ($data[0] eq 'CR') {
+	$cr_ins->execute($., $lastbs, @data[1..20]);
+    }
+}
+
+$dbh->commit;
