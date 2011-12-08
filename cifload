@@ -43,9 +43,8 @@ sub splitline ($) {
     use integer;
     my ($line) = @_;
     my $templ = $templ{substr($line, 0, 2)};
-    return [] unless defined $templ;
-    my @val = unpack($templ, $line);
-    return @val;
+    return (substr($line, 0, 2)) unless defined $templ;
+    return unpack($templ, $line);
 }
 
 my ($lastbs, $lastcr);
