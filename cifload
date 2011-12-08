@@ -12,6 +12,9 @@ my %templ = (
     BS => 'A2A1A6A6A6A7A1A1A2A4A4A1A8A1A3A4A3A6A1A1A1A1A4A4A1A1',
     BX => 'A2A4A5A2A1A8A1',
     CR => 'A2A8A2A4A4A1A8A1A3A4A3A6A1A1A1A1A4A4A4A5A8',
+    LI => 'A2A8A5A5A5A4A4A3A3A3A12A2A2A2',
+    LO => 'A2A8A5A4A3A3A2A2A12A2',
+    LT => 'A2A8A5A4A3A3A12',
     TI => 'A2A7A2A6A1A26A5A4A3A16A8',
     );
 
@@ -26,6 +29,10 @@ $dbh->do(q{CREATE TABLE cr (lineno INTEGER PRIMARY KEY, bslineno,
 			    class, sleepers, reservations, connect_ind,
 			    catering, service_brand, pref_tract, uic_code,
 			    rsid)});
+$dbh->do(q{CREATE TABLE li (crlineno, location, sched_arr_time, sched_dep_time,
+			    sched_pass, public_arr_time, public_dep_time,
+			    platform, line, path, activity, eng_allow,
+			    path_time, perform_allow)});
 
 $dbh->do(q{CREATE TABLE ti (tiploc PRIMARY KEY, caps, nalco, nalco_check,
 			    tps_descr, stanox, po_mcp, crs_code, capri_descr)});
@@ -38,6 +45,16 @@ my $cr_upd = $dbh->prepare(q{UPDATE cr SET pref_tract = ?, uic_code = ?,
 					   rsid = ?
 				       WHERE lineno = ?});
 my $ti_ins = $dbh->prepare(q{INSERT INTO ti VALUES(?,?,?,?,?,?,?,?,?)});
+my $li_ins = $dbh->prepare(q{INSERT INTO li VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)});
+my $lo_ins = $dbh->prepare(q{INSERT INTO li(crlineno, location, sched_dep_time,
+					    public_dep_time, platform, line,
+					    eng_allow, path_time, activity,
+					    perform_allow) 
+				    VALUES(?,?,?,?,?,?,?,?,?,?)});
+my $lt_ins = $dbh->prepare(q{INSERT INTO li(crlineno, location, sched_arr_time,
+					    public_arr_time, platform, path,
+					    activity)
+				    VALUES(?,?,?,?,?,?,?)});
 
 sub splitline ($) {
     use integer;
@@ -52,7 +69,13 @@ my ($lastbs, $lastcr);
 while (my $line = <>) {
     use integer;
     my @data = splitline($line);
-    if ($data[0] eq 'BS') {
+    if ($data[0] eq 'LI') {
+	$li_ins->execute($lastcr, @data[1..13]);
+    } elsif ($data[0] eq 'LO') {
+	$lo_ins->execute($lastcr, @data[1..9]);
+    } elsif ($data[0] eq 'LT') {
+	$lt_ins->execute($lastcr, @data[1..6]);
+    } elsif ($data[0] eq 'BS') {
 	next unless $data[1] eq 'N'; # Only handle new entries;
 	$bs_ins->execute($., @data[2..7, 25]);
 	$cr_ins->execute($., $., undef, @data[9..24], undef, undef, undef);
@@ -62,6 +85,7 @@ while (my $line = <>) {
 	$cr_upd->execute(@data[1,2,5], $lastbs);
     } elsif ($data[0] eq 'CR') {
 	$cr_ins->execute($., $lastbs, @data[1..20]);
+	$lastcr = $.;
     } elsif ($data[0] eq 'TI') {
 	$ti_ins->execute(@data[1..9]);
     }
