@@ -11,10 +11,10 @@ my $dbh = DBI->connect("dbi:SQLite:dbname=mca.sqlite", undef, undef,
 my %templ = (
     BS => 'A2A1A6A6A6A7A1A1A2A4A4A1A8A1A3A4A3A6A1A1A1A1A4A4A1A1',
     BX => 'A2A4A5A2A1A8A1',
-    CR => 'A2A8A2A4A4A1A8A1A3A4A3A6A1A1A1A1A4A4A4A5A8',
-    LI => 'A2A8A5A5A5A4A4A3A3A3A12A2A2A2',
-    LO => 'A2A8A5A4A3A3A2A2A12A2',
-    LT => 'A2A8A5A4A3A3A12',
+    CR => 'A2A7A1A2A4A4A1A8A1A3A4A3A6A1A1A1A1A4A4A4A5A8',
+    LI => 'A2A7A1A5A5A5A4A4A3A3A3A12A2A2A2',
+    LO => 'A2A7A1A5A4A3A3A2A2A12A2',
+    LT => 'A2A7A1A5A4A3A3A12',
     TI => 'A2A7A2A6A1A26A5A4A3A16A8',
     );
 
@@ -23,13 +23,14 @@ $dbh->do(q{CREATE TABLE bs (lineno INTEGER PRIMARY KEY,
 			    days, bhx, status, stp, atoc_code, ats_code)});
 
 $dbh->do(q{CREATE TABLE cr (lineno INTEGER PRIMARY KEY, bslineno,
-			    location, category, train_identity,
+			    tiploc, suffix, category, train_identity,
 			    headcode, course_ind, service_code, bussec,
 			    power_type, timing_load, speed, oper_chars,
 			    class, sleepers, reservations, connect_ind,
 			    catering, service_brand, pref_tract, uic_code,
 			    rsid)});
-$dbh->do(q{CREATE TABLE li (crlineno, location, sched_arr_time, sched_dep_time,
+$dbh->do(q{CREATE TABLE li (crlineno, tiploc, suffix,
+			    sched_arr_time, sched_dep_time,
 			    sched_pass, public_arr_time, public_dep_time,
 			    platform, line, path, activity, eng_allow,
 			    path_time, perform_allow)});
@@ -40,21 +41,23 @@ $dbh->do(q{CREATE TABLE ti (tiploc PRIMARY KEY, caps, nalco, nalco_check,
 my $bs_ins = $dbh->prepare(q{INSERT INTO bs VALUES(?,?,?,?,?,?,?,?, NULL, NULL)});
 my $bs_upd = $dbh->prepare(q{UPDATE bs SET atoc_code = ?, ats_code = ?
 			     	       WHERE lineno = ?});
-my $cr_ins = $dbh->prepare(q{INSERT INTO cr VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)});
+my $cr_ins = $dbh->prepare(q{INSERT INTO cr VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)});
 my $cr_upd = $dbh->prepare(q{UPDATE cr SET pref_tract = ?, uic_code = ?,
 					   rsid = ?
 				       WHERE lineno = ?});
 my $ti_ins = $dbh->prepare(q{INSERT INTO ti VALUES(?,?,?,?,?,?,?,?,?)});
-my $li_ins = $dbh->prepare(q{INSERT INTO li VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)});
-my $lo_ins = $dbh->prepare(q{INSERT INTO li(crlineno, location, sched_dep_time,
+my $li_ins = $dbh->prepare(q{INSERT INTO li VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)});
+my $lo_ins = $dbh->prepare(q{INSERT INTO li(crlineno, tiploc, suffix,
+					    sched_dep_time,
 					    public_dep_time, platform, line,
 					    eng_allow, path_time, activity,
 					    perform_allow) 
-				    VALUES(?,?,?,?,?,?,?,?,?,?)});
-my $lt_ins = $dbh->prepare(q{INSERT INTO li(crlineno, location, sched_arr_time,
+				    VALUES(?,?,?,?,?,?,?,?,?,?,?)});
+my $lt_ins = $dbh->prepare(q{INSERT INTO li(crlineno, tiploc, suffix,
+					    sched_arr_time,
 					    public_arr_time, platform, path,
 					    activity)
-				    VALUES(?,?,?,?,?,?,?)});
+				    VALUES(?,?,?,?,?,?,?,?)});
 
 sub splitline ($) {
     use integer;
@@ -70,21 +73,22 @@ while (my $line = <>) {
     use integer;
     my @data = splitline($line);
     if ($data[0] eq 'LI') {
-	$li_ins->execute($lastcr, @data[1..13]);
+	$li_ins->execute($lastcr, @data[1..14]);
     } elsif ($data[0] eq 'LO') {
-	$lo_ins->execute($lastcr, @data[1..9]);
+	$lo_ins->execute($lastcr, @data[1..10]);
     } elsif ($data[0] eq 'LT') {
-	$lt_ins->execute($lastcr, @data[1..6]);
+	$lt_ins->execute($lastcr, @data[1..7]);
     } elsif ($data[0] eq 'BS') {
 	next unless $data[1] eq 'N'; # Only handle new entries;
 	$bs_ins->execute($., @data[2..7, 25]);
-	$cr_ins->execute($., $., undef, @data[9..24], undef, undef, undef);
+	$cr_ins->execute($., $., undef, undef, @data[9..24],
+			 undef, undef, undef);
 	$lastbs = $.;
     } elsif ($data[0] eq 'BX') {
 	$bs_upd->execute(@data[3, 4], $lastbs);
 	$cr_upd->execute(@data[1,2,5], $lastbs);
     } elsif ($data[0] eq 'CR') {
-	$cr_ins->execute($., $lastbs, @data[1..20]);
+	$cr_ins->execute($., $lastbs, @data[1..21]);
 	$lastcr = $.;
     } elsif ($data[0] eq 'TI') {
 	$ti_ins->execute(@data[1..9]);
