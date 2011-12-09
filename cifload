@@ -48,17 +48,17 @@ my $cr_upd = $dbh->prepare(q{UPDATE cr SET pref_tract = ?, uic_code = ?,
 				       WHERE lineno = ?});
 my $ti_ins = $dbh->prepare(q{INSERT INTO ti VALUES(?,?,?,?,?,?,?,?,?)});
 my $li_ins = $dbh->prepare(q{INSERT INTO li VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)});
-my $lo_ins = $dbh->prepare(q{INSERT INTO li(crlineno, tiploc, suffix,
+my $lo_ins = $dbh->prepare(q{INSERT INTO li(lineno, crlineno, tiploc, suffix,
 					    sched_dep_time,
 					    public_dep_time, platform, line,
 					    eng_allow, path_time, activity,
 					    perform_allow) 
-				    VALUES(?,?,?,?,?,?,?,?,?,?,?)});
-my $lt_ins = $dbh->prepare(q{INSERT INTO li(crlineno, tiploc, suffix,
+				    VALUES(?,?,?,?,?,?,?,?,?,?,?,?)});
+my $lt_ins = $dbh->prepare(q{INSERT INTO li(lineno, crlineno, tiploc, suffix,
 					    sched_arr_time,
 					    public_arr_time, platform, path,
 					    activity)
-				    VALUES(?,?,?,?,?,?,?,?)});
+				    VALUES(?,?,?,?,?,?,?,?,?)});
 
 sub splitline ($) {
     use integer;
