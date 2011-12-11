@@ -8,7 +8,9 @@ use My::Schema;
 
 use DateTime::Format::ISO8601;
 
-my $date = DateTime::Format::ISO8601->parse_datetime($ARGV[1], 'YYMMDD');
+my $date = @ARGV > 1 ?
+	DateTime::Format::ISO8601->parse_datetime($ARGV[1], 'YYMMDD') :
+	DateTime->today;
 
 my $sch = My::Schema->connect("dbi:SQLite:dbname=mca.sqlite");
 
@@ -35,7 +37,7 @@ if ($ARGV[0] =~ /^[A-Z]\d\d\d\d\d$/) {
     }
     defined $loc or die "Station '$ARGV[0]' not found.\n";
 
-    print $loc->tps_descr, "\n";
+    printf "Dead departure board for %s on %s\n", $loc->tps_descr, $date->ymd;
 
     for my $li ($loc->lis({},
 			  {order_by =>
@@ -45,11 +47,11 @@ if ($ARGV[0] =~ /^[A-Z]\d\d\d\d\d$/) {
 	no warnings qw/uninitialized/;
 	my $lo =  $li->cr->bs->lo;
 	my $lt =  $li->cr->bs->lt;
-	printf "%5s(%4s): %26s %4s %4s %-26s\n",
+	printf "%5s/%4s: %26s %4s %3s %4s %-26s\n",
 	$li->cr->bs->unique_id,
 	$li->cr->train_identity,
 	$lo->id eq $li->id ? '' : $lo->ti->tps_descr,
-	$li->public_arr_time, $li->public_dep_time,
+	$li->public_arr_time, $li->platform, $li->public_dep_time,
 	$lt->id eq $li->id ? '' : $lt->ti->tps_descr,
     }
 }
