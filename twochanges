@@ -1,0 +1,87 @@
+#! /usr/bin/perl
+
+use DBI;
+
+my $dbh = DBI->connect("dbi:SQLite:dbname=mca.sqlite", undef, undef,
+		       {AutoCommit => 0, RaiseError => 1});
+
+$dbh->do(<<'EOF');
+CREATE TEMPORARY VIEW tts AS
+  SELECT * FROM li, cr, bs
+  	 WHERE cr.lineno=li.crlineno AND bs.lineno=cr.bslineno AND
+	       (li.public_arr_time != '0000' OR
+		li.public_dep_time != '0000') AND
+	       bs.status = 'P' AND bs.stp = 'P';
+EOF
+
+$dbh->do(<<'EOF');
+CREATE TEMPORARY VIEW connected AS
+  SELECT here.tiploc AS here, there.tiploc AS there
+  FROM tts here, tts there
+  WHERE here.bslineno = there.bslineno;
+EOF
+
+$dbh->do(<<'EOF');
+CREATE TEMPORARY VIEW london_terminals AS
+       SELECT * FROM ti
+       	      	WHERE tiploc IN ('KNGX', 'PADTON', 'PADTLUL', 'LIVST', 'EUSTON',
+		      	     	 'MARYLBN', 'WATRLOO', 'WATRLMN', 'WATRLLT',
+				 'VICTRIA', 'VICTRIC', 'VICTRIE',
+				 'STPADOM', 'STPX', 'STPXBOX',
+				 'LNDNBDC', 'LNDNBDE', 'LNDNBDG',
+				 'FENCHRS', 'CHRX', 'CANONST',
+				 'MRGT');
+EOF
+
+$dbh->do(<<'EOF');
+CREATE TEMPORARY VIEW direct AS
+  SELECT DISTINCT there AS tiploc FROM connected, london_terminals
+    WHERE here = london_terminals.tiploc;
+EOF
+
+$dbh->do(<<'EOF');
+CREATE TEMPORARY VIEW one_change AS
+  SELECT DISTINCT there from connected, direct
+    WHERE here = direct.tiploc;
+EOF
+
+my $direct_sth = $dbh->prepare(q{SELECT * FROM direct});
+
+my @direct = @{$dbh->selectcol_arrayref($direct_sth)};
+my %direct = map(($_ => 1), @direct);
+
+my $connect = $dbh->prepare(q{SELECT there FROM connected WHERE here = ?});
+
+warn "direct TIPLOCS: " . scalar(@direct) . "\n";
+
+my %onechange;
+
+for my $change (@direct) {
+    warn "changing at $change\n";
+    my @dest = @{$dbh->selectcol_arrayref($connect, undef, $change)};
+    warn "via $change: " . scalar(@dest) . "\n";
+    for my $dest (@dest) {
+	$onechange{$dest} = 1;
+    }
+    warn "onechange: " . scalar(keys %onechange) . "\n";
+}
+
+$dbh->do(q{CREATE TEMPORARY TABLE onechange (tiploc)});
+my $insert_onechange = $dbh->do(q{INSERT INTO onechange VALUES (?)});
+
+for (@onechange) {
+    $insert_onechange->execute($_);
+}
+
+$dbh->do(q{CREATE TEMPORARY TABLE stations (tiploc) AS
+	     SELECT tiploc FROM ti
+		       WHERE EXISTS (SELECT 1 FROM tts
+				     WHERE tts.tiploc = ti.tiploc)});
+
+my @twochanges = $dbh->selectall_arrayref(q{SELECT tiploc, tps_descr FROM stations, ti
+			   WHERE stations.tiploc = ti.tiploc AND
+			         NOT EXISTS (SELECT 1 FROM onechange WHERE onechange.tiploc = stations.tiploc)});
+
+for (@twochanges) {
+    printf "%7s %s\n";
+}
