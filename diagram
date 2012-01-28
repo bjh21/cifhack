@@ -1,0 +1,105 @@
+#! /usr/bin/perl
+
+use warnings;
+use strict;
+
+use My::Schema;
+
+use DateTime::Format::ISO8601;
+use YAML;
+
+my $sch = My::Schema->connect("dbi:SQLite:dbname=mca.sqlite");
+
+my $conf = YAML::LoadFile($ARGV[0]);
+
+my $date = 
+    DateTime::Format::ISO8601->parse_datetime($conf->{date}, 'YYMMDD');
+
+my @tiploc = @{$conf->{tiplocs}};
+
+my @train = @{$conf->{trains}};
+
+my %tiplocmap;
+for (my $i = 0; $i < @tiploc; $i++) {
+    $tiplocmap{$tiploc[$i]} = $i;
+}
+
+sub maptime {
+    my ($time) = @_;
+    my ($hh, $mm, $h) = $time =~ /^(\d\d)(\d\d)(H?)/;
+    return $hh*120 + $mm*2 + !!$h;
+}
+
+my $line = 0;
+
+sub pass {
+    if ($line) {
+	printf "%d %d cont\n", @_;
+    } else {
+	printf "%d %d start\n", @_;
+    }
+    $line = 1
+}
+
+sub done {
+    if ($line) {
+	printf "finish\n";
+    }
+    $line = 0;
+}
+
+print <<EOH;
+%!
+/conv {
+    72 mul exch
+    72 mul 8 mul 2880 div exch
+} def
+
+/start { conv moveto } def
+/cont { conv lineto } def
+/finish { stroke } def
+
+1 setlinewidth
+
+36 36 translate
+
+EOH
+
+for my $train ($sch->resultset('bs')->search({unique_id => \@train})) {
+    if ($train->runs_on($date)) {
+	for my $cr ($train->crs) {
+	    printf("%% %4s:\n", $cr->train_identity);
+	    for my $li ($cr->lis) {
+		if (exists $tiplocmap{$li->tiploc}) {
+		    if ($li->sched_pass) {
+		        pass(maptime($li->sched_pass), $tiplocmap{$li->tiploc});
+		    }
+		    if ($li->sched_arr_time) {
+		        pass(maptime($li->sched_arr_time),
+			     $tiplocmap{$li->tiploc});
+		    }
+		    if ($li->sched_dep_time) {
+		        pass(maptime($li->sched_dep_time),
+			     $tiplocmap{$li->tiploc});
+		    }
+		    if (defined($li->public_arr_time) &&
+			$li->public_arr_time ne '0000') {
+		        pass(maptime($li->public_arr_time),
+			     $tiplocmap{$li->tiploc});
+		    }
+		    if (defined($li->public_dep_time) &&
+			$li->public_dep_time ne '0000') {
+		        pass(maptime($li->public_dep_time),
+			     $tiplocmap{$li->tiploc});
+		    }
+		}
+	    }
+	}
+	done;
+    }
+} 
+
+print "showpage\n";
+
+# We're aiming for something like:
+# SELECT bs.* FROM bs, cr, li, wanted WHERE li.tiploc=wanted.tiploc AND li.crlineno=cr.lineno AND cr.bslineno = bs.lineno GROUP BY bs.lineno HAVING COUNT(*) > 1;
