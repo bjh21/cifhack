@@ -31,8 +31,11 @@ sub maptime {
 }
 
 my $line = 0;
+my $lasttime;
 
 sub pass {
+    return if defined($lasttime) && $_[0] < $lasttime;
+    $lasttime = $_[0];
     if ($line) {
 	printf "%d %d cont\n", @_;
     } else {
@@ -46,6 +49,7 @@ sub done {
 	printf "finish\n";
     }
     $line = 0;
+    undef $lasttime;
 }
 
 print <<EOH;
