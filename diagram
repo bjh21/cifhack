@@ -49,21 +49,48 @@ sub done {
 }
 
 print <<EOH;
-%!
+%!PS-Adobe-3.1
 /conv {
     72 mul exch
-    72 mul 8 mul 2880 div exch
+    72 mul 10 mul 2880 div exch
 } def
 
 /start { conv moveto } def
 /cont { conv lineto } def
 /finish { stroke } def
-
+/axes {
+    gsave 0.5 setlinewidth 0.5 setgray
+    dup length 1 sub
+    0 1 24 { dup 120 mul 0 conv moveto dup 120 mul 2 index conv lineto
+	2 string cvs show } for
+    stroke
+    0.1 setlinewidth
+    0 1 240 { dup 12 mul 0 conv moveto dup 12 mul 2 index conv lineto pop } for
+    stroke
+    pop
+    0.5 setlinewidth
+    0 1 2 index length 1 sub
+    { dup 0 exch conv moveto dup 2880 exch conv lineto
+	  1 index exch get show } for
+    pop stroke grestore
+} def
+%%EndProlog
+%%BeginSetup
+<< /PageSize [ 841 595 ] >> setpagedevice
+%%EndSetup
+%%Page 1 1
+%%BeginPageSetup
 1 setlinewidth
-
+/Helvetica findfont 10 scalefont setfont
 36 36 translate
-
+%EndPageSetup
 EOH
+
+print "[ ";
+for (@tiploc) {
+    printf "(%s) ", $_;
+}
+print "] axes\n";
 
 for my $train ($sch->resultset('bs')->search({unique_id => \@train})) {
     if ($train->runs_on($date)) {
@@ -78,10 +105,6 @@ for my $train ($sch->resultset('bs')->search({unique_id => \@train})) {
 		        pass(maptime($li->sched_arr_time),
 			     $tiplocmap{$li->tiploc});
 		    }
-		    if ($li->sched_dep_time) {
-		        pass(maptime($li->sched_dep_time),
-			     $tiplocmap{$li->tiploc});
-		    }
 		    if (defined($li->public_arr_time) &&
 			$li->public_arr_time ne '0000') {
 		        pass(maptime($li->public_arr_time),
@@ -92,6 +115,10 @@ for my $train ($sch->resultset('bs')->search({unique_id => \@train})) {
 		        pass(maptime($li->public_dep_time),
 			     $tiplocmap{$li->tiploc});
 		    }
+		    if ($li->sched_dep_time) {
+		        pass(maptime($li->sched_dep_time),
+			     $tiplocmap{$li->tiploc});
+		    }
 		}
 	    }
 	}
@@ -99,7 +126,7 @@ for my $train ($sch->resultset('bs')->search({unique_id => \@train})) {
     }
 } 
 
-print "showpage\n";
+print "showpage\n%%EOF\n";
 
 # We're aiming for something like:
 # SELECT bs.* FROM bs, cr, li, wanted WHERE li.tiploc=wanted.tiploc AND li.crlineno=cr.lineno AND cr.bslineno = bs.lineno GROUP BY bs.lineno HAVING COUNT(*) > 1;
