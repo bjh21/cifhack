@@ -39,9 +39,11 @@ if ($ARGV[0] =~ /^[A-Z]\d\d\d\d\d$/) {
 
     printf "Dead departure board for %s on %s\n", $loc->tps_descr, $date->ymd;
 
-    for my $li ($loc->lis({},
+    for my $li ($loc->lis([{ public_dep_time => { '!=' => '0000' } },
+			   { public_arr_time => { '!=' => '0000' } },],
 			  {order_by =>
-			       q{coalesce(public_dep_time, public_arr_time)},
+			       q{coalesce(nullif(public_dep_time, '0000'),
+					  nullif(public_arr_time, '0000'))},
 			   prefetch => {cr => 'bs'}})) {
 	next unless $li->cr->bs->runs_on($date);
 	no warnings qw/uninitialized/;
