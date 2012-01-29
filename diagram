@@ -33,15 +33,24 @@ sub maptime {
 my $line = 0;
 my $lasttime;
 
-sub pass {
-    $_[0] += 2880 if defined($lasttime) && $_[0] < $lasttime - 120;
+sub tweaktime {
+    $_[0] += 2880 if defined($lasttime) && $_[0] < $lasttime - 1440;
     $lasttime = $_[0];
-    if ($line) {
-	printf "%d %d cont\n", @_;
-    } else {
-	printf "%d %d start\n", @_;
-    }
+}
+sub pass {
+    tweaktime($_[0]);
+    printf "%d %d %s\n", @_, $line ? 'cont' : 'start';
     $line = 1
+}
+
+sub arr {
+    tweaktime($_[0]);
+    printf "%d %d arr\n", @_;
+}
+
+sub dep {
+    tweaktime($_[0]);
+    printf "%d %d dep\n", @_;
 }
 
 sub done {
@@ -61,7 +70,11 @@ print <<EOH;
 
 /start { conv moveto } def
 /cont { conv lineto } def
+/arr { gsave newpath conv 3 sub moveto 0 6 rlineto
+       0.1 setlinewidth stroke grestore } def
+/dep { arr } def
 /finish { stroke } def
+
 /axes {
     gsave 0.5 setlinewidth 0.5 setgray
     dup length 1 sub
@@ -110,14 +123,17 @@ for my $train ($sch->resultset('bs')->search({unique_id => \@train})) {
 			   $li->sched_arr_time, $li->public_arr_time,
 			   $li->sched_pass,
 			   $li->public_dep_time, $li->sched_dep_time);
-		    for ($li->sched_pass,
-			 $li->sched_arr_time, $li->public_arr_time,
-			 $li->public_dep_time, $li->sched_dep_time) {
+		    arr(maptime($li->public_arr_time) + $offset,
+			$tiplocmap{$li->tiploc}) if $li->public_arr_time;
+		    for ($li->sched_arr_time, $li->sched_pass,
+			 $li->sched_dep_time) {
 			if ($_) {
 			    pass(maptime($_) + $offset,
 				 $tiplocmap{$li->tiploc});
 			}
 		    }
+		    dep(maptime($li->public_dep_time) + $offset, 
+			$tiplocmap{$li->tiploc}) if $li->public_dep_time;
 		}
 	    }
 	    done;
