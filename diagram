@@ -91,7 +91,7 @@ print <<EOH;
 	2 string cvs show } for
     stroke
     0.1 setlinewidth
-    0 1 240 { dup 10 mul 0 conv moveto dup 10 mul 2 index conv lineto pop } for
+    0 1 288 { dup 10 mul 0 conv moveto dup 10 mul 2 index conv lineto pop } for
     stroke
     pop
     0.5 setlinewidth
