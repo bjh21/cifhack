@@ -5,15 +5,24 @@ use strict;
 
 use My::Schema;
 
-use DateTime::Format::ISO8601;
+use DateTime::Format::Natural;
 use YAML;
 
 my $sch = My::Schema->connect("dbi:SQLite:dbname=mca.sqlite");
 
 my $conf = YAML::LoadFile($ARGV[0]);
 
-my $date = 
-    DateTime::Format::ISO8601->parse_datetime($conf->{date}, 'YYMMDD');
+my $dateparse = DateTime::Format::Natural->new;
+my ($from, $to);
+if (ref($conf->{date}) eq 'ARRAY') {
+    ($from, $to) = map $dateparse->parse_datetime($_), @{$conf->{date}};
+} else {
+    ($from, $to) = $dateparse->parse_datetime_duration($conf->{date});
+}
+
+# XXX Rendering code only handles single days, so stick to that for now.
+$from->truncate(to => 'day');
+$to = $from->clone->add(days => 1);
 
 my @tiploc = @{$conf->{tiplocs}};
 
@@ -112,10 +121,14 @@ for (@tiploc) {
 print "] axes\n";
 
 for my $train ($sch->resultset('bs')->search({unique_id => \@train})) {
-    for (0, 1) {
-	if ($train->runs_on($date->clone->subtract(days=>$_))) {
-	    my $offset = -2880 * $_;
-	    printf("%% %s (day %d):\n", $train->unique_id, -$_);
+    for (my $day = $from->clone->truncate(to => 'day')->subtract(days => 1);
+	 $day < $to;
+	 $day->add(days => 1)) {
+	if ($train->runs_on($day)) {
+	    my ($m, $s) = $from->delta_ms($day)->in_units('minutes', 'seconds');
+	    my $offset = $m * 2 + $s / 30;
+	    $offset = -$offset if $day < $from;
+	    printf("%% %s (%s):\n", $train->unique_id, $day->ymd, $offset);
 	    for my $li (map $_->lis, $train->crs) {
 		if (exists $tiplocmap{$li->tiploc}) {
 		    no warnings qw/uninitialized/;
@@ -127,10 +140,8 @@ for my $train ($sch->resultset('bs')->search({unique_id => \@train})) {
 			$tiplocmap{$li->tiploc}) if $li->public_arr_time;
 		    for ($li->sched_arr_time, $li->sched_pass,
 			 $li->sched_dep_time) {
-			if ($_) {
-			    pass(maptime($_) + $offset,
-				 $tiplocmap{$li->tiploc});
-			}
+			pass(maptime($_) + $offset,
+			     $tiplocmap{$li->tiploc}) if $_;
 		    }
 		    dep(maptime($li->public_dep_time) + $offset, 
 			$tiplocmap{$li->tiploc}) if $li->public_dep_time;
