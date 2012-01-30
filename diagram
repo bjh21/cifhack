@@ -73,7 +73,7 @@ sub done {
 print <<EOH;
 %!PS-Adobe-3.1
 /conv {
-    72 mul exch
+    36 mul exch
     72 mul 10 mul 2880 div exch
 } def
 
