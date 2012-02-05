@@ -20,11 +20,13 @@ if (ref($conf->{date}) eq 'ARRAY') {
     ($from, $to) = $dateparse->parse_datetime_duration($conf->{date});
 }
 
-# XXX Rendering code only handles single days, so stick to that for now.
-$from->truncate(to => 'day');
+# Axis-rendering code only works in whole hours.
+
+$from->truncate(to => 'hour');
 unless (defined $to) {
     $to = $from->clone->add(days => 1);
 }
+$to->truncate(to => 'hour');
 
 my @tiploc = @{$conf->{tiplocs}};
 
@@ -76,7 +78,7 @@ print <<EOH;
 %!PS-Adobe-3.1
 /conv {
     36 mul exch
-    72 mul 10 mul 2880 div exch
+    tscale mul exch
 } def
 
 /start { conv moveto } def
@@ -87,28 +89,28 @@ print <<EOH;
 /finish { stroke } def
 
 /axes {
-    2 dict begin
+    3 dict begin
     /tiplocs exch def
-    /range exch def
+    /hours exch def
     gsave 0.5 setlinewidth 0.5 setgray
     tiplocs length 1 sub
-    0 1 range 120 div { % for
+    0 1 hours length 1 sub { % for
 	dup 120 mul 0 conv moveto dup 120 mul 2 index conv lineto
-	2 string cvs show
+	hours exch get show
     } for
     stroke
     0.1 setlinewidth
-    0 1 range 10 div {
+    0 1 hours length 1 sub 12 mul {
 	dup 10 mul 0 conv moveto dup 10 mul 2 index conv lineto pop
     } for
     stroke
     pop
     0.5 setlinewidth
     0 1 tiplocs length 1 sub
-    { dup 0 exch conv moveto dup range exch conv lineto
+    { dup 0 exch conv moveto dup hours length 1 sub 120 mul exch conv lineto
 	  tiplocs exch get show } for
     stroke grestore
-    0 0 conv range tiplocs length 1 sub conv rectclip
+    0 0 conv hours length 1 sub 120 mul tiplocs length 1 sub conv rectclip
     end
 } def
 %%EndProlog
@@ -129,10 +131,18 @@ sub DateTime::Duration::in_halfmins {
     return $m * 2 + $s / 30;
 }
 
-print $from->delta_ms($to)->in_halfmins;
-print " [ ";
+my $stdwidth = 72*10;
+print "/tscale ", $stdwidth / $from->delta_ms($to)->in_halfmins, " def\n";
+print "[ ";
+for (my $tick = $from->clone;
+     $tick <= $to;
+     $tick->add(hours => 1)) {
+    printf "(%02d)", $tick->hour;
+}
+print "]\n";
+print "[";
 for (@tiploc) {
-    printf "(%s) ", $_;
+    printf "(%s)", $_;
 }
 print "] axes\n";
 
