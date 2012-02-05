@@ -141,26 +141,28 @@ for my $train ($sch->resultset('bs')->search({unique_id => \@train})) {
 	 $day < $to;
 	 $day->add(days => 1)) {
 	if ($train->runs_on($day)) {
-	    my ($m, $s) = $from->delta_ms($day)->in_units('minutes', 'seconds');
-	    my $offset = $m * 2 + $s / 30;
+	    my $offset = $from->delta_ms($day)->in_halfmins;
 	    $offset = -$offset if $day < $from;
-	    printf("%% %s (%s):\n", $train->unique_id, $day->ymd, $offset);
+	    printf("%% %s (%s = %d):\n", $train->unique_id, $day->ymd, $offset);
 	    for my $li (map $_->lis, $train->crs) {
 		if (exists $tiplocmap{$li->tiploc}) {
 		    no warnings qw/uninitialized/;
-		    printf("%% %-5s %-4s %-5s %-4s %-5s\n",
+		    printf("%% %-5s %-4s %-5s %-4s %-5s %s\n",
 			   $li->sched_arr_time, $li->public_arr_time,
 			   $li->sched_pass,
-			   $li->public_dep_time, $li->sched_dep_time);
+			   $li->public_dep_time, $li->sched_dep_time,
+			   $li->tiploc);
 		    arr(maptime($li->public_arr_time) + $offset,
-			$tiplocmap{$li->tiploc}) if $li->public_arr_time;
+			$tiplocmap{$li->tiploc}) if $li->public_arr_time &&
+			    $li->public_arr_time ne '0000';
 		    for ($li->sched_arr_time, $li->sched_pass,
 			 $li->sched_dep_time) {
 			pass(maptime($_) + $offset,
 			     $tiplocmap{$li->tiploc}) if $_;
 		    }
 		    dep(maptime($li->public_dep_time) + $offset, 
-			$tiplocmap{$li->tiploc}) if $li->public_dep_time;
+			$tiplocmap{$li->tiploc}) if $li->public_dep_time &&
+			    $li->public_dep_time ne '0000';
 		}
 	    }
 	    done;
