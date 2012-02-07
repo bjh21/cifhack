@@ -76,6 +76,12 @@ sub done {
 
 print <<EOH;
 %!PS-Adobe-3.1
+%%Creator: diagram
+%%DocumentSuppliedResources: procset bjh21-diagram 0 0
+%%EndComments
+%%BeginResource: procset bjh21-diagram 0 0
+/bjh21-diagram
+10 dict dup begin
 /conv {
     36 mul exch
     tscale mul exch
@@ -113,16 +119,20 @@ print <<EOH;
     0 0 conv hours length 1 sub 120 mul tiplocs length 1 sub conv rectclip
     end
 } def
+end /ProcSet defineresource
+%%EndResource
 %%EndProlog
 %%BeginSetup
 << /PageSize [ 841 595 ] >> setpagedevice
+/bjh21-diagram /ProcSet findresource begin
 %%EndSetup
 %%Page 1 1
 %%BeginPageSetup
 1 setlinewidth
 /Helvetica findfont 10 scalefont setfont
 36 36 translate
-%EndPageSetup
+%%EndPageSetup
+userdict begin
 EOH
 
 sub DateTime::Duration::in_halfmins {
@@ -180,7 +190,7 @@ for my $train ($sch->resultset('bs')->search({unique_id => \@train})) {
     }
 } 
 
-print "showpage\n%%EOF\n";
+print "showpage end\n%%EOF\n";
 
 # We're aiming for something like:
 # SELECT bs.* FROM bs, cr, li, wanted WHERE li.tiploc=wanted.tiploc AND li.crlineno=cr.lineno AND cr.bslineno = bs.lineno GROUP BY bs.lineno HAVING COUNT(*) > 1;
