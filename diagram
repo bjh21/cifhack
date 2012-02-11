@@ -30,8 +30,6 @@ $to->truncate(to => 'hour');
 
 my @tiploc = @{$conf->{tiplocs}};
 
-my @train = @{$conf->{trains}};
-
 my %tiplocmap;
 for (my $i = 0; $i < @tiploc; $i++) {
     $tiplocmap{$tiploc[$i]} = $i;
@@ -156,7 +154,18 @@ for (@tiploc) {
 }
 print "] axes\n";
 
-for my $train ($sch->resultset('bs')->search({unique_id => \@train})) {
+my $rs;
+if (exists $conf->{trains}) {
+    my @train = @{$conf->{trains}};
+    $rs = $sch->resultset('bs')->search({unique_id => \@train})
+} else {
+    $rs = $sch->resultset('bs')->search({ 'lis.tiploc' => \@tiploc },
+					{ join => { crs => 'lis' },
+					  group_by => ['me.lineno'],
+					  having => \ "count(*) > 1"});
+}
+
+while (my $train = $rs->next) {
     for (my $day = $from->clone->truncate(to => 'day')->subtract(days => 1);
 	 $day < $to;
 	 $day->add(days => 1)) {
@@ -194,3 +203,5 @@ print "showpage end\n%%EOF\n";
 
 # We're aiming for something like:
 # SELECT bs.* FROM bs, cr, li, wanted WHERE li.tiploc=wanted.tiploc AND li.crlineno=cr.lineno AND cr.bslineno = bs.lineno GROUP BY bs.lineno HAVING COUNT(*) > 1;
+__END__
+
