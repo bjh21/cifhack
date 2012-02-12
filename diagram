@@ -99,9 +99,10 @@ print <<EOH;
 
 /start { conv moveto } def
 /cont { conv lineto } def
-/arr { gsave newpath conv 3 sub moveto 0 6 rlineto
-       0.1 setlinewidth stroke grestore } def
-/dep { arr } def
+/arr {  } def
+/dep { gsave newpath conv 3 sub exch 3 sub exch moveto
+    0 6 rlineto 6 0 rlineto 0 -6 rlineto closepath gsave
+       1 setgray fill grestore 1 setlinewidth stroke grestore} def
 /finish { stroke } def
 
 /axes {
