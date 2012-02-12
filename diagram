@@ -47,19 +47,15 @@ for (my $i = 0; $i < @tiploc; $i++) {
     $tiplocmap{$tiploc[$i]} = $i;
 }
 
-sub maptime {
-    my ($time) = @_;
-    my ($hh, $mm, $h) = $time =~ /^(\d\d)(\d\d)(H?)/;
-    return $hh*120 + $mm*2 + !!$h;
-}
-
 my $line = 0;
 my $lasttime;
 
 sub tweaktime {
-    $_[0] += 2880 if defined($lasttime) && $_[0] < $lasttime - 1440;
-    $lasttime = $_[0];
+    my $offset = $from->delta_ms($_[0])->in_halfmins;
+    $offset = -$offset if $_[0] < $from;
+    $_[0] = $offset;
 }
+
 sub pass {
     tweaktime($_[0]);
     printf "%d %d %s\n", @_, $line ? 'cont' : 'start';
@@ -178,14 +174,36 @@ if (exists $conf->{trains}) {
 					  having => \ "count(*) > 1"});
 }
 
+# Convert TSDB times into DateTimes.
+# For the start of a service, the first argument is a DateTime representing
+# the date on which the service starts.  It will be updated so as to be
+# suitable for passing to resolve_cont.
+
+sub resolve_start {
+    my $base = shift;
+    my ($time) = @_;
+    my ($hh, $mm, $h) = $time =~ /^(\d\d)(\d\d)(H?)/;
+    return $base->set(hour => $hh, minute => $mm, second => 30*!!$h)->clone;
+}
+
+# For later stops, the first argument is a time updated by resolve_start
+# or resolve_cont.
+sub resolve_cont {
+    my $base = shift;
+    my $was = $base->clone->subtract(hours => 12);
+    resolve_start($base, @_);
+    $base->add(days => 1) if ($base <= $was);
+    return $base->clone;
+}
+
 while (my $train = $rs->next) {
     for (my $day = $from->clone->truncate(to => 'day')->subtract(days => 1);
 	 $day < $to;
 	 $day->add(days => 1)) {
 	if ($train->runs_on($day)) {
-	    my $offset = $from->delta_ms($day)->in_halfmins;
-	    $offset = -$offset if $day < $from;
-	    printf("%% %s (%s = %d):\n", $train->unique_id, $day->ymd, $offset);
+	    printf("%% %s (%s):\n", $train->unique_id, $day->ymd);
+	    my $t = $day->clone;
+	    resolve_start($t, $train->lo->public_dep_time);
 	    for my $li (map $_->lis, $train->crs) {
 		if (exists $tiplocmap{$li->tiploc}) {
 		    no warnings qw/uninitialized/;
@@ -194,15 +212,15 @@ while (my $train = $rs->next) {
 			   $li->sched_pass,
 			   $li->public_dep_time, $li->sched_dep_time,
 			   $li->tiploc);
-		    arr(maptime($li->public_arr_time) + $offset,
+		    arr(resolve_cont($t, $li->public_arr_time),
 			$tiplocmap{$li->tiploc}) if $li->public_arr_time &&
 			    $li->public_arr_time ne '0000';
 		    for ($li->sched_arr_time, $li->sched_pass,
 			 $li->sched_dep_time) {
-			pass(maptime($_) + $offset,
+			pass(resolve_cont($t, $_),
 			     $tiplocmap{$li->tiploc}) if $_;
 		    }
-		    dep(maptime($li->public_dep_time) + $offset, 
+		    dep(resolve_cont($t, $li->public_dep_time), 
 			$tiplocmap{$li->tiploc}) if $li->public_dep_time &&
 			    $li->public_dep_time ne '0000';
 		}
