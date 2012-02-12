@@ -28,7 +28,19 @@ unless (defined $to) {
 }
 $to->truncate(to => 'hour');
 
-my @tiploc = @{$conf->{tiplocs}};
+# Convert bare TIPLOCs into ones with empty configuration.
+for (@{$conf->{tiplocs}}) {
+    $_ = { $_ => { } } unless ref;
+}
+
+# Separate TIPLOCS into names and configurations.
+my @tiploc = map((keys(%$_))[0], @{$conf->{tiplocs}});
+my %tiplocconf = map(%$_, @{$conf->{tiplocs}});
+
+# Set default configuration.
+for (keys %tiplocconf) {
+    $tiplocconf{$_}{label} ||= $_;
+}
 
 my %tiplocmap;
 for (my $i = 0; $i < @tiploc; $i++) {
@@ -150,7 +162,7 @@ for (my $tick = $from->clone;
 print "]\n";
 print "[";
 for (@tiploc) {
-    printf "(%s)", $_;
+    printf "(%s)", $tiplocconf{$_}{label};
 }
 print "] axes\n";
 
