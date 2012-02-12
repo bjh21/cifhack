@@ -12,7 +12,7 @@ my $sch = My::Schema->connect("dbi:SQLite:dbname=mca.sqlite");
 
 my $conf = YAML::LoadFile($ARGV[0]);
 
-my $dateparse = DateTime::Format::Natural->new;
+my $dateparse = DateTime::Format::Natural->new(time_zone => 'Europe/London');
 my ($from, $to);
 if (ref($conf->{date}) eq 'ARRAY') {
     ($from, $to) = map $dateparse->parse_datetime($_), @{$conf->{date}};
