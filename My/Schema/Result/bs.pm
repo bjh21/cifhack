@@ -118,8 +118,9 @@ __PACKAGE__->inflate_column('date_runs_to',
 sub applies_to {
     my $self = shift;
     my ($date) = @_;
-    return ($date >= $self->date_runs_from &&
-	    $date <= $self->date_runs_to &&
+    my $ymd = substr($date->ymd(''), 2);
+    return ($ymd >= $self->get_column('date_runs_from') &&
+	    $ymd <= $self->get_column('date_runs_to') &&
 	    substr($self->days, $date->day_of_week_0, 1) eq '1');
 }
 
