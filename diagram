@@ -178,12 +178,29 @@ if (exists $conf->{trains}) {
 # For the start of a service, the first argument is a DateTime representing
 # the date on which the service starts.  It will be updated so as to be
 # suitable for passing to resolve_cont.
+# Trains seem to retain the absolute time zone in which they depart,
+# so a train that leaves before 01:00 on the last Sunday in March continues
+# to be timed in GMT throughout its journey rather than switching to BST
+# at 01:00.
+
+sub fix_offset {
+    # DateTime::offset returns an offset in seconds.
+    # DateTime::set_time_zone takes an offset in hours and minutes.
+    # I sigh.
+    my ($dt) = @_;
+    my $off = $dt->offset;
+    use integer;
+    $off = sprintf("%+03d%02d", $off / 3600, ($off / 60) % 60);
+    $dt->set_time_zone($off);
+}
 
 sub resolve_start {
     my $base = shift;
     my ($time) = @_;
     my ($hh, $mm, $h) = $time =~ /^(\d\d)(\d\d)(H?)/;
-    return $base->set(hour => $hh, minute => $mm, second => 30*!!$h)->clone;
+    $base->set(hour => $hh, minute => $mm, second => 30*!!$h);
+    fix_offset($base);
+    return $base->clone;
 }
 
 # For later stops, the first argument is a time updated by resolve_start
@@ -203,7 +220,13 @@ while (my $train = $rs->next) {
 	if ($train->runs_on($day)) {
 	    printf("%% %s (%s):\n", $train->unique_id, $day->ymd);
 	    my $t = $day->clone;
-	    resolve_start($t, $train->lo->public_dep_time);
+	    eval {
+		resolve_start($t, $train->lo->public_dep_time);
+	    };
+	    if ($@) {
+		warn $train->unique_id . " on " . $day->ymd . ": $@\n";
+		next;
+	    }
 	    for my $li (map $_->lis, $train->crs) {
 		if (exists $tiplocmap{$li->tiploc}) {
 		    no warnings qw/uninitialized/;
