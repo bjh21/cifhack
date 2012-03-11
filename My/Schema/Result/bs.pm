@@ -111,7 +111,7 @@ sub lis {
     # lineno", which is ambiguous.
     my $rs = $self->crs->search_related('lis');
     my $me = $rs->current_source_alias;
-    return $rs->search(undef, {order_by => "$me.lineno"});
+    return $rs->search(undef, {order_by => "$me.lineno"})->search(@_);
 }
 
 sub lis_rs {
