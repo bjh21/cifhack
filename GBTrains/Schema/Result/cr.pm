@@ -1,4 +1,4 @@
-package My::Schema::Result::cr;
+package GBTrains::Schema::Result::cr;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
@@ -11,7 +11,7 @@ use base 'DBIx::Class::Core';
 
 =head1 NAME
 
-My::Schema::Result::cr
+GBTrains::Schema::Result::cr
 
 =cut
 
@@ -191,8 +191,8 @@ __PACKAGE__->set_primary_key("lineno");
 # Created by DBIx::Class::Schema::Loader v0.07010 @ 2011-12-08 16:27:11
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Oo2FL8vQNqkoF16CN/+fsA
 
-__PACKAGE__->belongs_to(bs => 'My::Schema::Result::bs', 'bslineno');
-__PACKAGE__->has_many(lis => 'My::Schema::Result::li', 'crlineno',
+__PACKAGE__->belongs_to(bs => 'GBTrains::Schema::Result::bs', 'bslineno');
+__PACKAGE__->has_many(lis => 'GBTrains::Schema::Result::li', 'crlineno',
     { order_by => 'lineno' });
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

@@ -1,4 +1,4 @@
-package My::Schema::Result::li;
+package GBTrains::Schema::Result::li;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
@@ -11,7 +11,7 @@ use base 'DBIx::Class::Core';
 
 =head1 NAME
 
-My::Schema::Result::li
+GBTrains::Schema::Result::li
 
 =cut
 
@@ -137,8 +137,8 @@ __PACKAGE__->add_columns(
     "lineno",
     { data_type => "integer", is_nullable => 0 });
 __PACKAGE__->set_primary_key("lineno");
-__PACKAGE__->belongs_to(cr => 'My::Schema::Result::cr', 'crlineno');
-__PACKAGE__->belongs_to(ti => 'My::Schema::Result::ti', 'tiploc');
+__PACKAGE__->belongs_to(cr => 'GBTrains::Schema::Result::cr', 'crlineno');
+__PACKAGE__->belongs_to(ti => 'GBTrains::Schema::Result::ti', 'tiploc');
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

@@ -1,4 +1,4 @@
-package My::Schema;
+package GBTrains::Schema;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE

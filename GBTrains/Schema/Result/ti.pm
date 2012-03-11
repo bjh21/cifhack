@@ -1,4 +1,4 @@
-package My::Schema::Result::ti;
+package GBTrains::Schema::Result::ti;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
@@ -11,7 +11,7 @@ use base 'DBIx::Class::Core';
 
 =head1 NAME
 
-My::Schema::Result::ti
+GBTrains::Schema::Result::ti
 
 =cut
 
@@ -92,7 +92,7 @@ __PACKAGE__->set_primary_key("tiploc");
 # Created by DBIx::Class::Schema::Loader v0.07010 @ 2011-12-08 16:27:11
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:ahEAlb28n1zc0sv8ruhhWA
 
-__PACKAGE__->has_many(lis => 'My::Schema::Result::li', 'tiploc');
+__PACKAGE__->has_many(lis => 'GBTrains::Schema::Result::li', 'tiploc');
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

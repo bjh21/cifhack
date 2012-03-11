@@ -3,12 +3,12 @@
 use warnings;
 use strict;
 
-use My::Schema;
+use GBTrains::Schema;
 
 use DateTime::Format::Natural;
 use YAML;
 
-my $sch = My::Schema->connect("dbi:SQLite:dbname=mca.sqlite");
+my $sch = GBTrains::Schema->connect("dbi:SQLite:dbname=mca.sqlite");
 
 my $conf = YAML::LoadFile($ARGV[0]);
 

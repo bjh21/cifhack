@@ -4,7 +4,7 @@ use warnings;
 use strict;
 
 
-use My::Schema;
+use GBTrains::Schema;
 
 use DateTime::Format::ISO8601;
 
@@ -12,7 +12,7 @@ my $date = @ARGV > 1 ?
 	DateTime::Format::ISO8601->parse_datetime($ARGV[1], 'YYMMDD') :
 	DateTime->today;
 
-my $sch = My::Schema->connect("dbi:SQLite:dbname=mca.sqlite");
+my $sch = GBTrains::Schema->connect("dbi:SQLite:dbname=mca.sqlite");
 
 if ($ARGV[0] =~ /^[A-Z]\d\d\d\d\d$/) {
     for my $train ($sch->resultset('bs')->search({unique_id => $ARGV[0]})) {

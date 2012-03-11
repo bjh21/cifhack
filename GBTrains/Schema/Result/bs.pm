@@ -1,4 +1,4 @@
-package My::Schema::Result::bs;
+package GBTrains::Schema::Result::bs;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
@@ -11,7 +11,7 @@ use base 'DBIx::Class::Core';
 
 =head1 NAME
 
-My::Schema::Result::bs
+GBTrains::Schema::Result::bs
 
 =cut
 
@@ -102,7 +102,7 @@ __PACKAGE__->set_primary_key("lineno");
 
 use DateTime::Format::ISO8601;
 
-__PACKAGE__->has_many(crs => 'My::Schema::Result::cr', 'bslineno',
+__PACKAGE__->has_many(crs => 'GBTrains::Schema::Result::cr', 'bslineno',
     {order_by => 'lineno'});
 
 sub lis {
