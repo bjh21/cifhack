@@ -105,6 +105,20 @@ use DateTime::Format::ISO8601;
 __PACKAGE__->has_many(crs => 'My::Schema::Result::cr', 'bslineno',
     {order_by => 'lineno'});
 
+sub lis {
+    my $self = shift;
+    # This mess is necessary because without it we just get "ORDER BY
+    # lineno", which is ambiguous.
+    my $rs = $self->crs->search_related('lis');
+    my $me = $rs->current_source_alias;
+    return $rs->search(undef, {order_by => "$me.lineno"});
+}
+
+sub lis_rs {
+    my $self = shift;
+    return scalar($self->lis(@_));
+}
+
 sub _parsedate {
     return DateTime::Format::ISO8601->parse_datetime($_[0], 'YYMMDD');
 }

@@ -227,7 +227,7 @@ while (my $train = $rs->next) {
 		warn $train->unique_id . " on " . $day->ymd . ": $@\n";
 		next;
 	    }
-	    for my $li (map $_->lis, $train->crs) {
+	    for my $li ($train->lis) {
 		if (exists $tiplocmap{$li->tiploc}) {
 		    no warnings qw/uninitialized/;
 		    printf("%% %-5s %-4s %-5s %-4s %-5s %s\n",
