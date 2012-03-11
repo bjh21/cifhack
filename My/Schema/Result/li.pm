@@ -134,9 +134,9 @@ __PACKAGE__->add_columns(
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:AFZfkUd2a8CLAdO85+d9wg
 
 __PACKAGE__->add_columns(
-    "_rowid_",
+    "lineno",
     { data_type => "integer", is_nullable => 0 });
-__PACKAGE__->set_primary_key("_rowid_");
+__PACKAGE__->set_primary_key("lineno");
 __PACKAGE__->belongs_to(cr => 'My::Schema::Result::cr', 'crlineno');
 __PACKAGE__->belongs_to(ti => 'My::Schema::Result::ti', 'tiploc');
 

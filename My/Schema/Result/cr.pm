@@ -193,7 +193,7 @@ __PACKAGE__->set_primary_key("lineno");
 
 __PACKAGE__->belongs_to(bs => 'My::Schema::Result::bs', 'bslineno');
 __PACKAGE__->has_many(lis => 'My::Schema::Result::li', 'crlineno',
-    { order_by => '_rowid_' });
+    { order_by => 'lineno' });
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;
