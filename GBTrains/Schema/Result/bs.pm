@@ -101,6 +101,7 @@ __PACKAGE__->set_primary_key("lineno");
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:o881skqG06tkiZR3cwOZxg
 
 use DateTime::Format::ISO8601;
+use GBTrains::Run;
 
 __PACKAGE__->has_many(crs => 'GBTrains::Schema::Result::cr', 'bslineno',
     {order_by => 'lineno'});
@@ -160,6 +161,10 @@ sub runs_on {
 	return !grep $_->applies_to($date), @overlay;
     }
     die "Unexpected STP field '$stp' in line $self->lineno";
+}
+
+sub instantiate {
+    return GBTrains::Run->new(@_);
 }
 
 sub lo {

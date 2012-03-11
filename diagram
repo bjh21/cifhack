@@ -174,82 +174,53 @@ if (exists $conf->{trains}) {
 					  having => \ "count(*) > 1"});
 }
 
-# Convert TSDB times into DateTimes.
-# For the start of a service, the first argument is a DateTime representing
-# the date on which the service starts.  It will be updated so as to be
-# suitable for passing to resolve_cont.
-# Trains seem to retain the absolute time zone in which they depart,
-# so a train that leaves before 01:00 on the last Sunday in March continues
-# to be timed in GMT throughout its journey rather than switching to BST
-# at 01:00.
-
-sub fix_offset {
-    # DateTime::offset returns an offset in seconds.
-    # DateTime::set_time_zone takes an offset in hours and minutes.
-    # I sigh.
-    my ($dt) = @_;
-    my $off = $dt->offset;
+sub tzstr {
+    my $off = $_[0]->offset;
     use integer;
-    $off = sprintf("%+03d%02d", $off / 3600, ($off / 60) % 60);
-    $dt->set_time_zone($off);
+    return sprintf("%+03d%02d", $off / 3600, ($off / 60) % 60);
 }
 
-sub resolve_start {
-    my $base = shift;
-    my ($time) = @_;
-    my ($hh, $mm, $h) = $time =~ /^(\d\d)(\d\d)(H?)/;
-    $base->set(hour => $hh, minute => $mm, second => 30*!!$h);
-    fix_offset($base);
-    return $base->clone;
+sub debugtime {
+    printf("%% %10s: %s%s\n", $_[0], $_[1], tzstr($_[1])) if $_[1];
 }
 
-# For later stops, the first argument is a time updated by resolve_start
-# or resolve_cont.
-sub resolve_cont {
-    my $base = shift;
-    my $was = $base->clone->subtract(hours => 12);
-    resolve_start($base, @_);
-    $base->add(days => 1) if ($base <= $was);
-    return $base->clone;
-}
-
-while (my $train = $rs->next) {
+while (my $bs = $rs->next) {
     for (my $day = $from->clone->truncate(to => 'day')->subtract(days => 1);
 	 $day < $to;
 	 $day->add(days => 1)) {
-	if ($train->runs_on($day)) {
-	    printf("%% %s (%s):\n", $train->unique_id, $day->ymd);
-	    my $t = $day->clone;
-	    eval {
-		resolve_start($t, $train->lo->public_dep_time);
-	    };
-	    if ($@) {
-		warn $train->unique_id . " on " . $day->ymd . ": $@\n";
-		next;
-	    }
-	    for my $li ($train->lis) {
-		if (exists $tiplocmap{$li->tiploc}) {
-		    no warnings qw/uninitialized/;
-		    printf("%% %-5s %-4s %-5s %-4s %-5s %s\n",
-			   $li->sched_arr_time, $li->public_arr_time,
-			   $li->sched_pass,
-			   $li->public_dep_time, $li->sched_dep_time,
-			   $li->tiploc);
-		    arr(resolve_cont($t, $li->public_arr_time),
-			$tiplocmap{$li->tiploc}) if $li->public_arr_time &&
-			    $li->public_arr_time ne '0000';
-		    for ($li->sched_arr_time, $li->sched_pass,
-			 $li->sched_dep_time) {
-			pass(resolve_cont($t, $_),
-			     $tiplocmap{$li->tiploc}) if $_;
-		    }
-		    dep(resolve_cont($t, $li->public_dep_time), 
-			$tiplocmap{$li->tiploc}) if $li->public_dep_time &&
-			    $li->public_dep_time ne '0000';
-		}
-	    }
-	    done;
+	my $train;
+	eval {
+	    $train = $bs->instantiate($day);
+	};
+	if ($@) {
+	    warn $bs->unique_id . " on " . $day->ymd . ": $@";
 	}
+	next unless defined $train;
+	printf("%% %s (%s):\n", $train->bs->unique_id, $day->ymd);
+	for my $loc ($train->stops) {
+	    if (exists $tiplocmap{$loc->li->tiploc}) {
+		no warnings qw/uninitialized/;
+		printf("%% %-5s %-4s %-5s %-4s %-5s %s\n",
+		       $loc->li->sched_arr_time, $loc->li->public_arr_time,
+		       $loc->li->sched_pass,
+		       $loc->li->public_dep_time, $loc->li->sched_dep_time,
+		       $loc->li->tiploc);
+		debugtime("sched arr",  $loc->sched_arr_time);
+		debugtime("sched pass", $loc->sched_pass);
+		debugtime("sched dep",  $loc->sched_dep_time);
+		debugtime("pub arr",    $loc->public_arr_time);
+		debugtime("pub dep",    $loc->public_dep_time);
+		arr($loc->public_arr_time, $tiplocmap{$loc->li->tiploc})
+		    if $loc->public_arr_time;
+		for ($loc->sched_arr_time, $loc->sched_pass,
+		     $loc->sched_dep_time) {
+		    pass($_, $tiplocmap{$loc->li->tiploc}) if $_;
+		}
+		dep($loc->public_dep_time, $tiplocmap{$loc->li->tiploc})
+		    if $loc->public_dep_time;
+	    }
+	}
+	done;
     }
 } 
 
