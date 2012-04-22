@@ -104,14 +104,17 @@ print <<EOH;
 /start { conv moveto } def
 /cont { conv lineto } def
 /adstyle { 1 setlinewidth } def
-/arr { gsave newpath conv moveto 3 3 rmoveto
-       -6 0 rlineto 0 -6 rlineto 6 0 rlineto
+/arr { gsave newpath conv moveto -3 3 rmoveto
+       3 0 rlineto 0 -6 rlineto -3 0 rlineto
        adstyle stroke grestore} def
-/dep { gsave newpath conv moveto -3 -3 rmoveto
-       6 0 rlineto 0 6 rlineto -6 0 rlineto
+/dep { gsave newpath conv moveto 3 3 rmoveto
+       -3 0 rlineto 0 -6 rlineto 3 0 rlineto
        adstyle stroke grestore } def
-/arrdep { gsave newpath conv moveto 3 3 rmoveto 0 -6 rlineto
-          conv 3 sub exch 3 sub exch lineto 0 6 rlineto closepath
+/arrdep { gsave newpath conv 4 2 roll conv
+          2 copy moveto 0 3 rmoveto 0 -6 rlineto
+          4 2 roll 2 copy moveto 0 3 rmoveto 0 -6 rlineto
+          2 copy moveto 3 3 rmoveto 4 2 roll 2 copy 3 add exch 3 sub exch lineto
+          moveto -3 -3 rmoveto 3 sub exch 3 add exch lineto
           adstyle stroke grestore } def
 /finish { stroke } def
 
