@@ -62,9 +62,17 @@ sub pass {
     $line = 1
 }
 
-sub arr {
-    tweaktime($_[0]);
-    printf "%d %d arr\n", @_;
+sub pubarrdep {
+    my ($arr, $dep, $stn) = @_;
+    tweaktime($arr) if $arr;
+    tweaktime($dep) if $dep;
+    if ($arr && $dep) {
+	printf "%d %d %d %d arrdep\n", $arr, $stn, $dep, $stn;
+    } elsif ($arr) {
+	printf "%d %d arr\n", $arr, $stn;
+    } elsif ($dep) {
+	printf "%d %d dep\n", $dep, $stn;
+    }
 }
 
 sub dep {
@@ -83,9 +91,9 @@ sub done {
 print <<EOH;
 %!PS-Adobe-3.1
 %%Creator: diagram
-%%DocumentSuppliedResources: procset bjh21-diagram 0 0
+%%DocumentSuppliedResources: procset bjh21-diagram 1 0
 %%EndComments
-%%BeginResource: procset bjh21-diagram 0 0
+%%BeginResource: procset bjh21-diagram 1 0
 /bjh21-diagram
 10 dict dup begin
 /conv {
@@ -95,10 +103,16 @@ print <<EOH;
 
 /start { conv moveto } def
 /cont { conv lineto } def
-/arr {  } def
-/dep { gsave newpath conv 3 sub exch 3 sub exch moveto
-    0 6 rlineto 6 0 rlineto 0 -6 rlineto closepath gsave
-       1 setgray fill grestore 1 setlinewidth stroke grestore} def
+/adstyle { 1 setlinewidth } def
+/arr { gsave newpath conv moveto 3 3 rmoveto
+       -6 0 rlineto 0 -6 rlineto 6 0 rlineto
+       adstyle stroke grestore} def
+/dep { gsave newpath conv moveto -3 -3 rmoveto
+       6 0 rlineto 0 6 rlineto -6 0 rlineto
+       adstyle stroke grestore } def
+/arrdep { gsave newpath conv moveto 3 3 rmoveto 0 -6 rlineto
+          conv 3 sub exch 3 sub exch lineto 0 6 rlineto closepath
+          adstyle stroke grestore } def
 /finish { stroke } def
 
 /axes {
@@ -210,14 +224,12 @@ while (my $bs = $rs->next) {
 		debugtime("sched dep",  $loc->sched_dep_time);
 		debugtime("pub arr",    $loc->public_arr_time);
 		debugtime("pub dep",    $loc->public_dep_time);
-		arr($loc->public_arr_time, $tiplocmap{$loc->li->tiploc})
-		    if $loc->public_arr_time;
 		for ($loc->sched_arr_time, $loc->sched_pass,
 		     $loc->sched_dep_time) {
 		    pass($_, $tiplocmap{$loc->li->tiploc}) if $_;
 		}
-		dep($loc->public_dep_time, $tiplocmap{$loc->li->tiploc})
-		    if $loc->public_dep_time;
+		pubarrdep($loc->public_arr_time, $loc->public_dep_time,
+			  $tiplocmap{$loc->li->tiploc});
 	    }
 	}
 	done;
