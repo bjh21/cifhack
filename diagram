@@ -97,7 +97,7 @@ print <<EOH;
 /bjh21-diagram
 10 dict dup begin
 /conv {
-    36 mul exch
+    18 mul exch
     tscale mul exch
 } def
 
