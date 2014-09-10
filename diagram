@@ -33,6 +33,19 @@ for (@{$conf->{tiplocs}}) {
     $_ = { $_ => { } } unless ref;
 }
 
+# Convert CRS codes into TIPLOCs.
+for (@{$conf->{tiplocs}}) {
+    my $code = (keys(%$_))[0];
+    if (length($code) == 3) {
+	my $ti = $sch->resultset("ti")->search({crs_code => $code})->single;
+	if ($ti) {
+	    $_ = { $ti->tiploc => $_->{$code}};
+	} else {
+	    warn "couldn't get a TIPLOC for $code\n";
+	}
+    }
+}
+
 # Separate TIPLOCS into names and configurations.
 my @tiploc = map((keys(%$_))[0], @{$conf->{tiplocs}});
 my %tiplocconf = map(%$_, @{$conf->{tiplocs}});
