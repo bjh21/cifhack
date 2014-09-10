@@ -50,9 +50,23 @@ for (@{$conf->{tiplocs}}) {
 my @tiploc = map((keys(%$_))[0], @{$conf->{tiplocs}});
 my %tiplocconf = map(%$_, @{$conf->{tiplocs}});
 
+sub labelcase ($) {
+    for (@_) {
+	s/\b(\w)(\w+)/$1\L$2/g;
+	return $_;
+    }
+}
+
 # Set default configuration.
 for (keys %tiplocconf) {
-    $tiplocconf{$_}{label} ||= $_;
+    unless (exists($tiplocconf{$_}{label})) {
+	my $ti = $sch->resultset("ti")->search({tiploc => $_})->single;
+	if ($ti) {
+	    $tiplocconf{$_}{label} = labelcase($ti->capri_descr);
+	} else {
+	    warn "couldn't get a description for $_\n";
+	}
+    }
 }
 
 my %tiplocmap;
