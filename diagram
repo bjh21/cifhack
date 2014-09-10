@@ -62,7 +62,7 @@ for (keys %tiplocconf) {
     unless (exists($tiplocconf{$_}{label})) {
 	my $ti = $sch->resultset("ti")->search({tiploc => $_})->single;
 	if ($ti) {
-	    $tiplocconf{$_}{label} = labelcase($ti->capri_descr);
+	    $tiplocconf{$_}{label} = labelcase($ti->tps_descr);
 	} else {
 	    warn "couldn't get a description for $_\n";
 	}
