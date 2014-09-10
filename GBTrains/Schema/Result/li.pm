@@ -139,6 +139,16 @@ __PACKAGE__->add_columns(
 __PACKAGE__->set_primary_key("lineno");
 __PACKAGE__->belongs_to(cr => 'GBTrains::Schema::Result::cr', 'crlineno');
 __PACKAGE__->belongs_to(ti => 'GBTrains::Schema::Result::ti', 'tiploc');
+__PACKAGE__->inflate_column(activity => {
+    inflate => sub {
+	my ($raw, $result) = @_;
+	return [grep($_ ne '', unpack('A2A2A2A2A2A2', $raw))];
+    },
+    deflate => sub {
+	my ($cooked, $result) = @_;
+	return pack("A2A2A2A2A2A2", @$cooked);
+    }
+			    });
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

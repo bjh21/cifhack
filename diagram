@@ -244,11 +244,11 @@ while (my $bs = $rs->next) {
 	for my $loc ($train->stops) {
 	    if (exists $tiplocmap{$loc->li->tiploc}) {
 		no warnings qw/uninitialized/;
-		printf("%% %-5s %-4s %-5s %-4s %-5s %s\n",
+		printf("%% %-5s %-4s %-5s %-4s %-5s %s (%s)\n",
 		       $loc->li->sched_arr_time, $loc->li->public_arr_time,
 		       $loc->li->sched_pass,
 		       $loc->li->public_dep_time, $loc->li->sched_dep_time,
-		       $loc->li->tiploc);
+		       $loc->li->tiploc, join(", ", @{$loc->li->activity}));
 		debugtime("sched arr",  $loc->sched_arr_time);
 		debugtime("sched pass", $loc->sched_pass);
 		debugtime("sched dep",  $loc->sched_dep_time);
