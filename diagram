@@ -90,15 +90,19 @@ sub pass {
 }
 
 sub pubarrdep {
-    my ($arr, $dep, $stn) = @_;
+    my ($arr, $dep, $stn, $act) = @_;
     tweaktime($arr) if $arr;
     tweaktime($dep) if $dep;
+    my $qual = '';
+    if (grep /^R$/, @$act) {
+	$qual = 'req'; # Request stop
+    }
     if ($arr && $dep) {
-	printf "%d %d %d %d arrdep\n", $arr, $stn, $dep, $stn;
+	printf "%d %d %d %d %sarrdep\n", $arr, $stn, $dep, $stn, $qual;
     } elsif ($arr) {
-	printf "%d %d arr\n", $arr, $stn;
+	printf "%d %d %sarr\n", $arr, $stn, $qual;
     } elsif ($dep) {
-	printf "%d %d dep\n", $dep, $stn;
+	printf "%d %d %sdep\n", $dep, $stn, $qual;
     }
 }
 
@@ -128,7 +132,7 @@ print <<EOH;
     tscale mul exch
 } def
 
-/start { conv moveto } def
+/start { gsave conv moveto } def
 /cont { conv lineto } def
 /adstyle { 1 setlinewidth } def
 /arr { gsave newpath conv moveto -3 3 rmoveto
@@ -143,7 +147,11 @@ print <<EOH;
           2 copy moveto 3 3 rmoveto 4 2 roll 2 copy 3 add exch 3 sub exch lineto
           moveto -3 -3 rmoveto 3 sub exch 3 add exch lineto
           adstyle stroke grestore } def
-/finish { stroke } def
+/reqarrdep { gsave newpath conv 4 2 roll conv
+	     moveto -3 -3 rmoveto 3 3 rlineto -3 3 rlineto
+	     3 -3 rmoveto lineto 3 3 rmoveto -3 -3 rlineto 3 -3 rlineto
+	     adstyle stroke grestore } def
+/finish { stroke grestore } def
 
 /axes {
     3 dict begin
@@ -259,7 +267,7 @@ while (my $bs = $rs->next) {
 		    pass($_, $tiplocmap{$loc->li->tiploc}) if $_;
 		}
 		pubarrdep($loc->public_arr_time, $loc->public_dep_time,
-			  $tiplocmap{$loc->li->tiploc});
+			  $tiplocmap{$loc->li->tiploc}, $loc->li->activity);
 	    }
 	}
 	done;
