@@ -85,7 +85,8 @@ sub tweaktime {
 
 sub pass {
     tweaktime($_[0]);
-    printf "%d %d %s\n", @_, $line ? 'cont' : 'start';
+    printf "%d %d %s\n", @_[0,1], $line ? 'cont' : 'start';
+    printf("%s\n", $_[2]) unless $line;
     $line = 1
 }
 
@@ -249,6 +250,8 @@ while (my $bs = $rs->next) {
 	}
 	next unless defined $train;
 	printf("%% %s (%s):\n", $train->bs->unique_id, $day->ymd);
+	my $style = "";
+	$style = "1 0 0 setrgbcolor" if $train->bs->atoc_code eq 'VT';
 	for my $loc ($train->stops) {
 	    if (exists $tiplocmap{$loc->li->tiploc}) {
 		no warnings qw/uninitialized/;
@@ -264,7 +267,7 @@ while (my $bs = $rs->next) {
 		debugtime("pub dep",    $loc->public_dep_time);
 		for ($loc->sched_arr_time, $loc->sched_pass,
 		     $loc->sched_dep_time) {
-		    pass($_, $tiplocmap{$loc->li->tiploc}) if $_;
+		    pass($_, $tiplocmap{$loc->li->tiploc}, $style) if $_;
 		}
 		pubarrdep($loc->public_arr_time, $loc->public_dep_time,
 			  $tiplocmap{$loc->li->tiploc}, $loc->li->activity);
