@@ -251,7 +251,8 @@ while (my $bs = $rs->next) {
 	next unless defined $train;
 	printf("%% %s (%s):\n", $train->bs->unique_id, $day->ymd);
 	my $style = "";
-	$style = "1 0 0 setrgbcolor" if $train->bs->atoc_code eq 'VT';
+	$style = "1 0 0 setrgbcolor % VT service"
+	    if $train->bs->atoc_code eq 'VT';
 	for my $loc ($train->stops) {
 	    if (exists $tiplocmap{$loc->li->tiploc}) {
 		no warnings qw/uninitialized/;
