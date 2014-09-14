@@ -1,17 +1,21 @@
+use utf8;
 package GBTrains::Schema::Result::cr;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
+
+=head1 NAME
+
+GBTrains::Schema::Result::cr
+
+=cut
 
 use strict;
 use warnings;
 
 use base 'DBIx::Class::Core';
 
-
-=head1 NAME
-
-GBTrains::Schema::Result::cr
+=head1 TABLE: C<cr>
 
 =cut
 
@@ -185,11 +189,22 @@ __PACKAGE__->add_columns(
   "rsid",
   { data_type => "", is_nullable => 1 },
 );
+
+=head1 PRIMARY KEY
+
+=over 4
+
+=item * L</lineno>
+
+=back
+
+=cut
+
 __PACKAGE__->set_primary_key("lineno");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07010 @ 2011-12-08 16:27:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Oo2FL8vQNqkoF16CN/+fsA
+# Created by DBIx::Class::Schema::Loader v0.07039 @ 2014-09-14 13:05:17
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:dlYK5ozTEdAszxIDbgbCdQ
 
 __PACKAGE__->belongs_to(bs => 'GBTrains::Schema::Result::bs', 'bslineno');
 __PACKAGE__->has_many(lis => 'GBTrains::Schema::Result::li', 'crlineno',

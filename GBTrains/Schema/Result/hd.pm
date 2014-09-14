@@ -1,12 +1,12 @@
 use utf8;
-package GBTrains::Schema::Result::ti;
+package GBTrains::Schema::Result::hd;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
 
 =head1 NAME
 
-GBTrains::Schema::Result::ti
+GBTrains::Schema::Result::hd
 
 =cut
 
@@ -15,55 +15,55 @@ use warnings;
 
 use base 'DBIx::Class::Core';
 
-=head1 TABLE: C<ti>
+=head1 TABLE: C<hd>
 
 =cut
 
-__PACKAGE__->table("ti");
+__PACKAGE__->table("hd");
 
 =head1 ACCESSORS
 
-=head2 tiploc
-
-  data_type: (empty string)
-  is_nullable: 0
-
-=head2 caps
+=head2 file_id
 
   data_type: (empty string)
   is_nullable: 1
 
-=head2 nalco
+=head2 extract_date
 
   data_type: (empty string)
   is_nullable: 1
 
-=head2 nalco_check
+=head2 extract_time
 
   data_type: (empty string)
   is_nullable: 1
 
-=head2 tps_descr
+=head2 current_file_ref
 
   data_type: (empty string)
   is_nullable: 1
 
-=head2 stanox
+=head2 last_file_ref
 
   data_type: (empty string)
   is_nullable: 1
 
-=head2 po_mcp
+=head2 update_ind
 
   data_type: (empty string)
   is_nullable: 1
 
-=head2 crs_code
+=head2 version
 
   data_type: (empty string)
   is_nullable: 1
 
-=head2 capri_descr
+=head2 extract_start_date
+
+  data_type: (empty string)
+  is_nullable: 1
+
+=head2 extract_end_date
 
   data_type: (empty string)
   is_nullable: 1
@@ -71,43 +71,30 @@ __PACKAGE__->table("ti");
 =cut
 
 __PACKAGE__->add_columns(
-  "tiploc",
-  { data_type => "", is_nullable => 0 },
-  "caps",
+  "file_id",
   { data_type => "", is_nullable => 1 },
-  "nalco",
+  "extract_date",
   { data_type => "", is_nullable => 1 },
-  "nalco_check",
+  "extract_time",
   { data_type => "", is_nullable => 1 },
-  "tps_descr",
+  "current_file_ref",
   { data_type => "", is_nullable => 1 },
-  "stanox",
+  "last_file_ref",
   { data_type => "", is_nullable => 1 },
-  "po_mcp",
+  "update_ind",
   { data_type => "", is_nullable => 1 },
-  "crs_code",
+  "version",
   { data_type => "", is_nullable => 1 },
-  "capri_descr",
+  "extract_start_date",
+  { data_type => "", is_nullable => 1 },
+  "extract_end_date",
   { data_type => "", is_nullable => 1 },
 );
 
-=head1 PRIMARY KEY
-
-=over 4
-
-=item * L</tiploc>
-
-=back
-
-=cut
-
-__PACKAGE__->set_primary_key("tiploc");
-
 
 # Created by DBIx::Class::Schema::Loader v0.07039 @ 2014-09-14 13:05:17
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:R1QbtADXXJKJLS2BQrLm8g
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:A/LWvstAzkc3BHyc+DkPPA
 
-__PACKAGE__->has_many(lis => 'GBTrains::Schema::Result::li', 'tiploc');
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 1;

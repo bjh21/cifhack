@@ -1,17 +1,21 @@
+use utf8;
 package GBTrains::Schema::Result::bs;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
+
+=head1 NAME
+
+GBTrains::Schema::Result::bs
+
+=cut
 
 use strict;
 use warnings;
 
 use base 'DBIx::Class::Core';
 
-
-=head1 NAME
-
-GBTrains::Schema::Result::bs
+=head1 TABLE: C<bs>
 
 =cut
 
@@ -94,11 +98,22 @@ __PACKAGE__->add_columns(
   "ats_code",
   { data_type => "", is_nullable => 1 },
 );
+
+=head1 PRIMARY KEY
+
+=over 4
+
+=item * L</lineno>
+
+=back
+
+=cut
+
 __PACKAGE__->set_primary_key("lineno");
 
 
-# Created by DBIx::Class::Schema::Loader v0.07010 @ 2011-12-08 16:27:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:o881skqG06tkiZR3cwOZxg
+# Created by DBIx::Class::Schema::Loader v0.07039 @ 2014-09-14 13:05:17
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:2uRFc5vI21WS1HlcWTFX1A
 
 use DateTime::Format::ISO8601;
 use GBTrains::Run;

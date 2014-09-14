@@ -1,13 +1,8 @@
+use utf8;
 package GBTrains::Schema::Result::li;
 
 # Created by DBIx::Class::Schema::Loader
 # DO NOT MODIFY THE FIRST PART OF THIS FILE
-
-use strict;
-use warnings;
-
-use base 'DBIx::Class::Core';
-
 
 =head1 NAME
 
@@ -15,9 +10,24 @@ GBTrains::Schema::Result::li
 
 =cut
 
+use strict;
+use warnings;
+
+use base 'DBIx::Class::Core';
+
+=head1 TABLE: C<li>
+
+=cut
+
 __PACKAGE__->table("li");
 
 =head1 ACCESSORS
+
+=head2 lineno
+
+  data_type: 'integer'
+  is_auto_increment: 1
+  is_nullable: 0
 
 =head2 crlineno
 
@@ -97,6 +107,8 @@ __PACKAGE__->table("li");
 =cut
 
 __PACKAGE__->add_columns(
+  "lineno",
+  { data_type => "integer", is_auto_increment => 1, is_nullable => 0 },
   "crlineno",
   { data_type => "integer", is_nullable => 1 },
   "tiploc",
@@ -129,9 +141,21 @@ __PACKAGE__->add_columns(
   { data_type => "", is_nullable => 1 },
 );
 
+=head1 PRIMARY KEY
 
-# Created by DBIx::Class::Schema::Loader v0.07010 @ 2011-12-08 16:27:11
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:AFZfkUd2a8CLAdO85+d9wg
+=over 4
+
+=item * L</lineno>
+
+=back
+
+=cut
+
+__PACKAGE__->set_primary_key("lineno");
+
+
+# Created by DBIx::Class::Schema::Loader v0.07039 @ 2014-09-14 13:05:17
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:6OIvpoVvgGzT4hSGbkDHmg
 
 __PACKAGE__->add_columns(
     "lineno",
