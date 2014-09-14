@@ -154,28 +154,38 @@ print <<EOH;
 	     adstyle stroke grestore } def
 /finish { stroke grestore } def
 
+/labelright {
+    gsave 1.5 -3 rmoveto show grestore
+} def
+
+/labelup {
+    gsave currentpoint translate 90 rotate 0 0 moveto labelright grestore
+} def
+
 /axes {
     3 dict begin
     /tiplocs exch def
     /hours exch def
+    % Major time divisions (hours)
     gsave 0.5 setlinewidth 0.5 setgray
     tiplocs length 1 sub
     0 1 hours length 1 sub { % for
-	dup 120 mul 0 conv moveto dup 120 mul 2 index conv lineto
-	hours exch get gsave
-	currentpoint translate 90 rotate 0 0 moveto show grestore
+	dup 120 mul 0 conv moveto dup 120 mul 2 index conv 10 add lineto
+	hours exch get labelup
     } for
     stroke
+    % Minor time divisions (five minutes)
     0.1 setlinewidth
     0 1 hours length 1 sub 12 mul {
 	dup 10 mul 0 conv moveto dup 10 mul 2 index conv lineto pop
     } for
     stroke
     pop
+    % Space divisions
     0.5 setlinewidth
     0 1 tiplocs length 1 sub
     { dup 0 exch conv moveto dup hours length 1 sub 120 mul exch conv lineto
-	  tiplocs exch get show } for
+	  tiplocs exch get labelright } for
     stroke grestore
     0 0 conv hours length 1 sub 120 mul tiplocs length 1 sub conv rectclip
     end
