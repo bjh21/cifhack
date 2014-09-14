@@ -162,7 +162,8 @@ print <<EOH;
     tiplocs length 1 sub
     0 1 hours length 1 sub { % for
 	dup 120 mul 0 conv moveto dup 120 mul 2 index conv lineto
-	hours exch get show
+	hours exch get gsave
+	currentpoint translate 90 rotate 0 0 moveto show grestore
     } for
     stroke
     0.1 setlinewidth
