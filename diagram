@@ -28,6 +28,11 @@ unless (defined $to) {
 }
 $to->truncate(to => 'hour');
 
+my $heading = $from->ymd;
+if ($to->ymd ne $from->ymd) {
+    $heading .= " to " . $to->ymd;
+}
+
 # Convert bare TIPLOCs into ones with empty configuration.
 for (@{$conf->{tiplocs}}) {
     $_ = { $_ => { } } unless ref;
@@ -154,6 +159,12 @@ print <<EOH;
 	     adstyle stroke grestore } def
 /finish { stroke grestore } def
 
+/heading {
+    gsave 0 exch conv moveto 0 30 rmoveto
+    /Helvetica-Bold findfont 20 scalefont setfont
+    show grestore
+} def
+
 /labelright {
     gsave 1.5 -3 rmoveto show grestore
 } def
@@ -218,11 +229,14 @@ printf "gsave -18 -18 moveto currentfont 0.5 scalefont setfont
 
 my $stdwidth = 72*10;
 print "/tscale ", $stdwidth / $from->delta_ms($to)->in_halfmins, " def\n";
+
+printf "(%s) %d heading\n", $heading, scalar(@tiploc);
+
 print "[ ";
 for (my $tick = $from->clone;
      $tick <= $to;
      $tick->add(hours => 1)) {
-    printf "(%02d)", $tick->hour;
+    printf "(%s)", $tick->strftime("%H:%M");
 }
 print "]\n";
 print "[";
