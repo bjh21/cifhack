@@ -201,6 +201,10 @@ sub DateTime::Duration::in_halfmins {
     return $m * 2 + $s / 30;
 }
 
+printf "gsave -18 -18 moveto currentfont 0.5 scalefont setfont
+        (CIF file ID: %s) show grestore\n",
+       $sch->resultset('hd')->single->file_id;
+
 my $stdwidth = 72*10;
 print "/tscale ", $stdwidth / $from->delta_ms($to)->in_halfmins, " def\n";
 print "[ ";
