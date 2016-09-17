@@ -284,6 +284,8 @@ while (my $bs = $rs->next) {
 	    if $train->bs->atoc_code eq 'VT';
 	$style = "0 0 1 setrgbcolor % loco-hauled service"
 	    if $train->bs->crs->first()->power_type eq 'D';
+	$style = "0.75 setgray % bus service"
+	    if grep($train->bs->crs->first()->category eq $_, ('BR', 'BS'));
 	for my $loc ($train->stops) {
 	    if (exists $tiplocmap{$loc->li->tiploc}) {
 		no warnings qw/uninitialized/;
