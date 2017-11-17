@@ -1,0 +1,48 @@
+bjh21/cifhack
+=============
+
+This is a wobbly pile of Perl scripts for manipulating the main-line
+train timetable of Great Britain.  It is very unpolished, but might be
+of some use.
+
+loading data
+------------
+
+To do anything useful, you'll need some timetable data.  This can be
+downloaded from <http://data.atoc.org>.  The distribution zip file
+contains a bunch of files of which the largest is named *.mca and
+contains the timetable.  Run "./cifload *.mca" to load this into a
+SQLite database.
+
+diagrams
+--------
+
+Possibly the most interesting script here is "diagram", which draws
+space/time diagrams of timetables.  This takes a YAML configuration
+file as input, which might look like this:
+
+date: ["2014-09-12 08:00", "2014-09-12 18:00"]
+tiplocs:
+ - CBG: { label: Cambridge }
+ - FOXTON:  { label: Foxton }
+ - SHPRTH:  { label: Shepreth }
+ - MELDRTH: { label: Meldreth }
+ - ROYSTON: { label: Royston }
+ - ASHWELC: { label: Ashwell & Morden }
+ - BALDOCK: { label: Baldock }
+ - LTCE:    { label: Letchworth }
+ - HITCHIN: { label: Hitchin }
+
+You can use either 3-alpha codes or TIPLOCs, and you can leave out the
+labels like this:
+
+date: ["2014-09-12 08:00", "2014-09-12 18:00"]
+tiplocs:
+ - CBG
+ - FXN
+
+Pass the name of the configuration file on the command line of
+"diagram" and it will spit out some poorly-formatted PostScript on
+stdout.  Colouring can be customised by editing the script (look for
+$style).
+
